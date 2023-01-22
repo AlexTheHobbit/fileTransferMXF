@@ -106,10 +106,19 @@ def copy_with_progress(src, dst, *, follow_symlinks=True):
     shutil.copymode(src, dst)
     return dst
 
+def ingest_folder():
+    # Move the destination folder to finalDst_path
+    dst_path_ingest = os.path.join(finalDst_path, dst_name)
+    shutil.move(dst_path, dst_path_ingest)
+    print(/n)
+    messagebox.showinfo(title="Ingest Complete", message="The folder has been moved to "+dst_path_ingest)
+    root.destroy()
+    exit()
+
 # Set the fixed source and destination paths
 src_path = "F:\\Clip"
 dst_path = "N:\\VANTAGE\\File_Ingest"
-finalDst_path = "N:\\VANTAGE\\File_Ingest\\test_folder"
+finalDst_path = "N:\\VANTAGE\\File_Ingest\\FILE"
 
 # Get the destination folder name from the user
 root = Tk()
@@ -132,21 +141,16 @@ else:
     # Create the destination folder
     os.mkdir(dst_path)
 
-# Copy all .mxf files from the source folder to the destination folder
+# Copy all .MXF files from the source folder to the destination folder
+file_count = 1
 for file_name in os.listdir(src_path):
     if file_name.endswith(".MXF"):
         src_file = os.path.join(src_path, file_name)
         dst_file = os.path.join(dst_path, file_name)
+        print(str(file_name) + " | " + str(file_count) + "/" + str(len([file for file in os.listdir(src_path) if file.endswith('.MXF')])))
         copy_with_progress(src_file, dst_file)
-        print(" " + str(file_name) + " Copied!")
-
-def ingest_folder():
-    # Move the destination folder to finalDst_path
-    dst_path_ingest = os.path.join(finalDst_path, dst_name)
-    shutil.move(dst_path, dst_path_ingest)
-    messagebox.showinfo(title="Ingest Complete", message="The folder has been moved to "+dst_path_ingest)
-    root.destroy()
-    exit()
+        print(f" {file_name} Copied!")
+        file_count += 1
 
 ingest_folder()
 # root.deiconify()
