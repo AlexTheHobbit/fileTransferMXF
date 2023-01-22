@@ -5,5 +5,10 @@
 *.webp
 *.avi
 *.mxf
+*.MXF
+*.spec
 /.idea
 /venv
+/build
+/dist
+/f

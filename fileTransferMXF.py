@@ -110,7 +110,7 @@ def ingest_folder():
     # Move the destination folder to finalDst_path
     dst_path_ingest = os.path.join(finalDst_path, dst_name)
     shutil.move(dst_path, dst_path_ingest)
-    print(/n)
+    print("/n")
     messagebox.showinfo(title="Ingest Complete", message="The folder has been moved to "+dst_path_ingest)
     root.destroy()
     exit()
