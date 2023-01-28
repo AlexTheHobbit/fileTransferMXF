@@ -2,6 +2,18 @@ import os
 import shutil
 import tkinter.messagebox as messagebox
 from tkinter import Tk, simpledialog
+from flask import Flask, render_template, request
+app = Flask("fileTransferMXF")
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+def copy_file():
+    src = request.form['src']
+    dst = request.form['dst']
+    shutil.copyfile(src, dst, progress=copy_progress)
+    return "File copied successfully"
 
 def progress_percentage(perc, width=None):
     #credit: https://stackoverflow.com/questions/29967487/get-progress-back-from-shutil-file-copy-thread/48450305#48450305
@@ -52,10 +64,8 @@ def progress_percentage(perc, width=None):
     # return progressbar as string
     return ''.join(progress_bar)
 
-
 def copy_progress(copied, total):
     print('\r' + progress_percentage(100*copied/total, width=30), end='')
-
 
 def copyfile(src, dst, *, follow_symlinks=True):
     """Copy data from src to dst.
@@ -87,7 +97,6 @@ def copyfile(src, dst, *, follow_symlinks=True):
                 copyfileobj(fsrc, fdst, callback=copy_progress, total=size)
     return dst
 
-
 def copyfileobj(fsrc, fdst, callback, total, length=16*1024):
     copied = 0
     while True:
@@ -98,7 +107,6 @@ def copyfileobj(fsrc, fdst, callback, total, length=16*1024):
         copied += len(buf)
         callback(copied, total=total)
 
-
 def copy_with_progress(src, dst, *, follow_symlinks=True):
     if os.path.isdir(dst):
         dst = os.path.join(dst, os.path.basename(src))
@@ -106,54 +114,59 @@ def copy_with_progress(src, dst, *, follow_symlinks=True):
     shutil.copymode(src, dst)
     return dst
 
-def ingest_folder():
+# Get the destination folder name from the user
+def destinationFolderCreation(rootFolder):
+    root = Tk()
+    root.withdraw()
+    dst_name = simpledialog.askstring(title="Destination Folder", prompt="Enter the name of the destination folder:")
+
+    # Create the destination folder path
+    dst_finalPath = os.path.join(rootFolder, dst_name)
+
+    # Check if the destination folder already exists
+    if os.path.exists(dst_finalPath):
+        # Ask the user if they want to overwrite the files
+        answer = messagebox.askyesno(title="Destination Folder Exists", message="The destination folder already exists. Do you want to overwrite the files in it?")
+        if not answer:
+            messagebox.showinfo(title="Copy Aborted", message="The copy operation has been cancelled.")
+            root.deiconify()
+            root.destroy()
+            exit()
+    else:
+        # Create the destination folder
+        os.mkdir(dst_finalPath)
+        return dst_finalPath
+
+# Copy all .mxf files from the source folder to the destination folder
+def copyAllFiles(copyFrom, copyTo, copyFiletype):
+    file_count = 1
+    for file_name in os.listdir(src_path):
+        if file_name.lower().endswith(copyFiletype):
+            src_file = os.path.join(copyFrom, file_name)
+            dst_file = os.path.join(copyTo, file_name)
+            print(str(file_name) + " | " + str(file_count) + "/" + str(len([file for file in os.listdir(src_path) if file.lower().endswith(copyFiletype)])))
+            copy_with_progress(src_file, dst_file)
+            print(f" {file_name} Copied!")
+            file_count += 1
+
+# Drag created folder into final destination folder
+def ingest_folder(targetFolder, destinationFolder):
     # Move the destination folder to finalDst_path
-    dst_path_ingest = os.path.join(finalDst_path, dst_name)
-    shutil.move(dst_path, dst_path_ingest)
-    print("/n")
-    messagebox.showinfo(title="Ingest Complete", message="The folder has been moved to "+dst_path_ingest)
-    root.destroy()
+    shutil.move(targetFolder, destinationFolder)
+    print("\n")
+    messagebox.showinfo(title="Ingest Complete", message="The folder has been moved to "+ destinationFolder)
     exit()
 
-# Set the fixed source and destination paths
-src_path = "F:\\Clip"
-dst_path = "N:\\VANTAGE\\File_Ingest"
-finalDst_path = "N:\\VANTAGE\\File_Ingest\\FILE"
+if __name__ == "__main__":
+    #app.run(debug=True, host='127.0.0.1', port=5000)
 
-# Get the destination folder name from the user
-root = Tk()
-root.withdraw()
-dst_name = simpledialog.askstring(title="Destination Folder", prompt="Enter the name of the destination folder:")
+    src_path = "C:\\Users\\alex.hobbs\\Desktop\\Input"
+    dst_path = "C:\\Users\\alex.hobbs\\Desktop\\Output"
+    finalDst_path = "C:\\Users\\alex.hobbs\\Desktop\\Output\\FILE"
+    file_extension = ".mxf"
 
-# Create the destination folder path
-dst_path = os.path.join(dst_path, dst_name)
+    targetPath = destinationFolderCreation(dst_path)
+    copyAllFiles(src_path, targetPath, file_extension)
+    ingest_folder(targetPath, finalDst_path)
 
-# Check if the destination folder already exists
-if os.path.exists(dst_path):
-    # Ask the user if they want to overwrite the files
-    answer = messagebox.askyesno(title="Destination Folder Exists", message="The destination folder already exists. Do you want to overwrite the files in it?")
-    if not answer:
-        messagebox.showinfo(title="Copy Aborted", message="The copy operation has been cancelled.")
-        root.deiconify()
-        root.destroy()
-        exit()
-else:
-    # Create the destination folder
-    os.mkdir(dst_path)
 
-# Copy all .MXF files from the source folder to the destination folder
-file_count = 1
-for file_name in os.listdir(src_path):
-    if file_name.endswith(".MXF"):
-        src_file = os.path.join(src_path, file_name)
-        dst_file = os.path.join(dst_path, file_name)
-        print(str(file_name) + " | " + str(file_count) + "/" + str(len([file for file in os.listdir(src_path) if file.endswith('.MXF')])))
-        copy_with_progress(src_file, dst_file)
-        print(f" {file_name} Copied!")
-        file_count += 1
-
-ingest_folder()
-# root.deiconify()
-# answer = messagebox.askyesno(title="Copy Complete", message="Copy Complete. Ingest?")
-# if answer:
-#     ingest_folder()
