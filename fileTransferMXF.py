@@ -140,11 +140,11 @@ def destinationFolderCreation(rootFolder):
 # Copy all .mxf files from the source folder to the destination folder
 def copyAllFiles(copyFrom, copyTo, copyFiletype):
     file_count = 1
-    for file_name in os.listdir(src_path):
+    for file_name in os.listdir(copyFrom):
         if file_name.lower().endswith(copyFiletype):
             src_file = os.path.join(copyFrom, file_name)
             dst_file = os.path.join(copyTo, file_name)
-            print(str(file_name) + " | " + str(file_count) + "/" + str(len([file for file in os.listdir(src_path) if file.lower().endswith(copyFiletype)])))
+            print(str(file_name) + " | " + str(file_count) + "/" + str(len([file for file in os.listdir(copyFrom) if file.lower().endswith(copyFiletype)])))
             copy_with_progress(src_file, dst_file)
             print(f" {file_name} Copied!")
             file_count += 1
@@ -155,7 +155,6 @@ def ingest_folder(targetFolder, destinationFolder):
     shutil.move(targetFolder, destinationFolder)
     print("\n")
     messagebox.showinfo(title="Ingest Complete", message="The folder has been moved to "+ destinationFolder)
-    exit()
 
 if __name__ == "__main__":
     #app.run(debug=True, host='127.0.0.1', port=5000)
@@ -168,5 +167,4 @@ if __name__ == "__main__":
     targetPath = destinationFolderCreation(dst_path)
     copyAllFiles(src_path, targetPath, file_extension)
     ingest_folder(targetPath, finalDst_path)
-
-
+    exit()
